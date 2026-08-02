@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المفتي الذكي - نظام التدقيق الشرعي المالي</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,4 57.7,31.5 82.5,17.5 68.5,42.3 96,50 68.5,57.7 82.5,82.5 57.7,68.5 50,96 42.3,68.5 17.5,82.5 31.5,57.7 4,50 31.5,42.3 17.5,17.5 42.3,31.5' fill='%23C9A227'/%3E%3C/svg%3E">
+    <!-- الأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- الرسوم البيانية -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- الخطوط -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-deep: #0A1912;
+            --panel: #102420;
+            --panel-raised: #17302A;
+            --gold: #C9A227;
+            --gold-light: #E8C468;
+            --gold-dim: #6E5A22;
+            --ivory: #F2ECDC;
+            --ivory-dim: #A79F8C;
+            --emerald: #1F7A5C;
+            --emerald-light: #3FBF95;
+            --burgundy: #8B2635;
+            --burgundy-light: #C24A57;
+            --amber: #C97A2B;
+            --amber-light: #E2A659;
+            --border-line: rgba(201, 162, 39, 0.22);
+            --font-display: 'Reem Kufi', sans-serif;
+            --font-body: 'Tajawal', sans-serif;
+            --font-utility: 'Cairo', sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-deep);
+            color: var(--ivory);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* نسيج هندسي خافت يغطي الصفحة بالكامل - يستحضر شبكيات المشربية */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                repeating-linear-gradient(45deg, transparent 0 18px, rgba(201,162,39,0.05) 18px 19px, transparent 19px 36px),
+                repeating-linear-gradient(-45deg, transparent 0 18px, rgba(201,162,39,0.05) 18px 19px, transparent 19px 36px);
+        }
+
+        ::-webkit-scrollbar { width: 9px; height: 9px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+        /* ===== الشريط العلوي ===== */
+        .topbar {
+            position: relative;
+            z-index: 2;
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            background: linear-gradient(180deg, #0C1F17 0%, var(--bg-deep) 100%);
+            border-bottom: 1px solid var(--border-line);
+        }
+        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand-star {
+            width: 42px; height: 42px; flex-shrink: 0;
+            filter: drop-shadow(0 0 6px rgba(201,162,39,0.35));
+        }
+        .brand-star polygon { fill: none; stroke: var(--gold); stroke-width: 4; stroke-linejoin: round; }
+        .eyebrow {
+            margin: 0; font-family: var(--font-utility); font-size: 12px; font-weight: 600;
+            color: var(--ivory-dim); letter-spacing: 1px;
+        }
+        .brand-title {
+            margin: 2px 0 0; font-family: var(--font-display); font-size: 28px; font-weight: 700;
+            color: var(--gold-light); letter-spacing: 1px;
+        }
+        .topbar-note {
+            display: flex; align-items: center; gap: 8px;
+            font-family: var(--font-utility); font-size: 13px; color: var(--ivory-dim);
+            border: 1px solid var(--border-line); padding: 7px 16px; border-radius: 30px;
+        }
+        .topbar-note i { color: var(--gold); }
+        @media (max-width: 780px) { .topbar-note { display: none; } }
+
+        /* شريط زخرفي هندسي رفيع */
+        .geo-band {
+            flex: 0 0 auto; height: 10px; position: relative; z-index: 2;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10'%3E%3Cpath d='M0 5 L10 0 L20 5 L10 10 Z M20 5 L30 0 L40 5 L30 10 Z' fill='none' stroke='%23C9A227' stroke-width='1' opacity='0.55'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            background-position: center;
+            border-bottom: 1px solid var(--border-line);
+            background-color: #0C1F17;
+        }
+
+        /* ===== العرض المزدوج ===== */
+        .layout-container {
+            position: relative; z-index: 1;
+            display: flex;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .pdf-panel {
+            flex: 1;
+            border-left: 1px solid var(--border-line);
+            background: #0C1815;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pdf-panel iframe { width: 100%; height: 100%; border: none; display: none; }
+        .pdf-placeholder {
+            text-align: center; color: var(--ivory-dim); padding: 30px;
+        }
+        .pdf-placeholder svg { width: 70px; height: 70px; margin-bottom: 16px; opacity: 0.5; }
+        .pdf-placeholder svg polygon { fill: none; stroke: var(--gold-dim); stroke-width: 3; }
+        .pdf-placeholder h4 { margin: 0 0 6px; font-family: var(--font-display); font-size: 19px; color: var(--ivory-dim); font-weight: 500; }
+        .pdf-placeholder p { margin: 0; font-size: 13px; }
+
+        .dashboard-panel {
+            flex: 1;
+            padding: 22px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        /* ===== صندوق الرفع بشكل قوسي (محراب) ===== */
+        .upload-box {
+            background: var(--panel);
+            padding: 34px 25px 25px;
+            border-radius: 90px 90px 14px 14px;
+            text-align: center;
+            border: 1px solid var(--border-line);
+            position: relative;
+        }
+        .upload-box::before {
+            content: '';
+            position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+            width: 22px; height: 22px;
+            background-color: var(--bg-deep);
+            border: 2px solid var(--gold);
+            clip-path: polygon(50% 0%, 61% 39%, 100% 39%, 69% 61%, 79% 100%, 50% 76%, 21% 100%, 31% 61%, 0% 39%, 39% 39%);
+        }
+        .upload-box h2 {
+            margin: 0 0 4px; font-family: var(--font-display); font-size: 23px; font-weight: 500;
+            color: var(--gold-light); display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .upload-box .sub {
+            margin: 0 0 20px; font-size: 13px; color: var(--ivory-dim);
+        }
+
+        .dropzone {
+            display: block; cursor: pointer;
+            border: 1.5px dashed var(--gold-dim);
+            border-radius: 12px;
+            padding: 22px 16px;
+            margin-bottom: 18px;
+            transition: 0.25s;
+            background: rgba(201,162,39,0.03);
+        }
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--gold);
+            background: rgba(201,162,39,0.08);
+        }
+        .dropzone i { font-size: 26px; color: var(--gold); display: block; margin-bottom: 8px; }
+        .dropzone span.dz-text { font-size: 14px; color: var(--ivory-dim); }
+        .dropzone input[type="file"] { display: none; }
+        #fileNameLabel {
+            display: none; margin-top: 10px; font-family: var(--font-utility);
+            font-size: 13px; color: var(--emerald-light); font-weight: 600;
+        }
+        #fileNameLabel i { margin-left: 6px; }
+
+        button.btn-primary {
+            background: linear-gradient(180deg, var(--gold-light), var(--gold));
+            color: #16210F; border: none;
+            padding: 12px 32px; font-size: 16px; border-radius: 8px;
+            cursor: pointer; font-weight: 700; font-family: var(--font-utility);
+            transition: 0.25s; box-shadow: 0 4px 14px rgba(201,162,39,0.15);
+        }
+        button.btn-primary:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(201,162,39,0.28); }
+        button.btn-primary:disabled { background: var(--panel-raised); color: var(--ivory-dim); cursor: not-allowed; box-shadow: none; }
+
+        /* ===== لوحة الملخص ===== */
+        .summary-dashboard {
+            display: none;
+            background: var(--panel);
+            padding: 22px;
+            border-radius: 14px;
+            border: 1px solid var(--border-line);
+        }
+        .summary-dashboard > h3 {
+            margin: 0 0 16px; font-family: var(--font-display); font-size: 18px; font-weight: 500;
+            color: var(--gold-light); text-align: center;
+        }
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .stat-box { padding: 0 14px; position: relative; }
+        .stat-box:not(:last-child)::after {
+            content: ''; position: absolute; top: 4px; bottom: 4px; left: -1px;
+            width: 1px; background: var(--border-line);
+        }
+        .stat-box h3 { margin: 0; font-size: 30px; font-family: var(--font-utility); font-weight: 700; }
+        .stat-box p { margin: 6px 0 0; color: var(--ivory-dim); font-size: 13px; font-family: var(--font-utility); }
+        .chart-container { width: 210px; margin: 0 auto; }
+
+        /* ===== الفلترة ===== */
+        .filters {
+            display: none;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+        .filter-btn {
+            background: transparent; color: var(--ivory-dim);
+            border: 1px solid var(--border-line); padding: 8px 18px;
+            border-radius: 20px; cursor: pointer; transition: 0.2s;
+            font-family: var(--font-utility); font-size: 13px; font-weight: 600;
+        }
+        .filter-btn.active {
+            background: linear-gradient(180deg, var(--gold-light), var(--gold));
+            color: #16210F; border-color: transparent;
+        }
+        .filter-btn:hover:not(.active) { border-color: var(--gold); color: var(--gold-light); }
+
+        /* ===== البطاقات القابلة للطي ===== */
+        .accordion-item {
+            background: var(--panel);
+            border: 1px solid var(--border-line);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        .accordion-header {
+            padding: 15px 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.015);
+            transition: 0.2s;
+        }
+        .accordion-header:hover { background: rgba(201,162,39,0.06); }
+        .accordion-header .clause-num {
+            color: var(--gold); font-weight: 700; margin-left: 12px; font-family: var(--font-utility); font-size: 14px;
+        }
+        .accordion-body {
+            display: none;
+            padding: 18px;
+            border-top: 1px solid var(--border-line);
+            background: var(--bg-deep);
+        }
+        .accordion-body.open { display: block; }
+
+        .badge {
+            padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            font-family: var(--font-utility);
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .badge-success { background: rgba(31, 122, 92, 0.18); color: var(--emerald-light); }
+        .badge-success::before { background: var(--emerald-light); }
+        .badge-danger { background: rgba(139, 38, 53, 0.22); color: var(--burgundy-light); }
+        .badge-danger::before { background: var(--burgundy-light); }
+        .badge-warning { background: rgba(201, 122, 43, 0.18); color: var(--amber-light); }
+        .badge-warning::before { background: var(--amber-light); }
+
+        .clause-text {
+            color: var(--ivory-dim); font-size: 13.5px; margin-bottom: 16px;
+            padding: 12px 14px; border-right: 3px solid var(--gold-dim);
+            background: rgba(201,162,39,0.04); border-radius: 0 6px 6px 0; line-height: 1.7;
+        }
+        .audit-text { font-size: 15.5px; line-height: 1.9; white-space: pre-wrap; color: var(--ivory); }
+        .typewriter-cursor { border-left: 2px solid var(--gold); animation: blink 0.7s infinite; }
+        @keyframes blink { 50% { border-color: transparent; } }
+
+        /* ===== شريط الإجراءات ===== */
+        .action-bar {
+            display: flex; gap: 15px; margin-top: 16px;
+            padding-top: 14px; border-top: 1px dashed var(--border-line);
+            align-items: center;
+        }
+        .action-btn {
+            background: none; border: none; color: var(--ivory-dim);
+            cursor: pointer; font-size: 13px; transition: 0.2s; font-family: var(--font-utility);
+        }
+        .action-btn:hover { color: var(--gold-light); }
+        .action-btn i { margin-left: 5px; }
+
+        /* ===== التحميل ===== */
+        .loader { display: none; text-align: center; padding: 26px; }
+        .star-spinner { width: 58px; height: 58px; display: block; margin: 0 auto; }
+        .star-spinner polygon {
+            fill: none; stroke: var(--gold); stroke-width: 3.5; stroke-linejoin: round;
+            transform-box: fill-box; transform-origin: 50% 50%;
+            animation: star-spin 3.2s linear infinite, star-pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes star-spin { to { transform: rotate(360deg); } }
+        @keyframes star-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+        .loader-text { margin-top: 12px; color: var(--gold-light); font-family: var(--font-utility); font-size: 14px; }
+
+        @media (max-width: 1024px) {
+            .layout-container { flex-direction: column; overflow-y: auto; }
+            .pdf-panel { height: 46vh; border-left: none; border-bottom: 1px solid var(--border-line); flex: none; }
+            .brand-title { font-size: 22px; }
+            .brand-star { width: 34px; height: 34px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="brand">
+        <svg class="brand-star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="50,4 57.7,31.5 82.5,17.5 68.5,42.3 96,50 68.5,57.7 82.5,82.5 57.7,68.5 50,96 42.3,68.5 17.5,82.5 31.5,57.7 4,50 31.5,42.3 17.5,17.5 42.3,31.5" />
+        </svg>
+        <div>
+            <p class="eyebrow">نظام تدقيق شرعي مالي ذكي</p>
+            <h1 class="brand-title">المفتي الذكي</h1>
+        </div>
+    </div>
+    <div class="topbar-note"><i class="fa-solid fa-shield-halved"></i><span>مراجعة آلية وفق الضوابط الفقهية</span></div>
+</header>
+<div class="geo-band"></div>
+
+<div class="layout-container">
+    <!-- معاينة العقد -->
+    <div class="pdf-panel">
+        <div class="pdf-placeholder" id="pdfPlaceholder">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="50,4 57.7,31.5 82.5,17.5 68.5,42.3 96,50 68.5,57.7 82.5,82.5 57.7,68.5 50,96 42.3,68.5 17.5,82.5 31.5,57.7 4,50 31.5,42.3 17.5,17.5 42.3,31.5" />
+            </svg>
+            <h4>لم يتم اختيار عقد بعد</h4>
+            <p>سيظهر ملف العقد هنا فور اختياره لمعاينته</p>
+        </div>
+        <iframe id="pdfViewer" src="" title="معاينة العقد"></iframe>
+    </div>
+
+    <!-- لوحة التحكم -->
+    <div class="dashboard-panel">
+
+        <div class="upload-box">
+            <h2><i class="fa-solid fa-scale-balanced"></i> المدقق الشرعي الذكي</h2>
+            <p class="sub">ارفع عقدك المالي ليتم تدقيقه بنداً بنداً وفق أحكام الشريعة الإسلامية</p>
+
+            <label class="dropzone" id="dropzone" for="pdfFile">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span class="dz-text">اسحب ملف العقد هنا أو انقر للاختيار (PDF)</span>
+                <input type="file" id="pdfFile" accept="application/pdf, image/png, image/jpeg, image/jpg" onchange="previewPDF()">
+            </label>
+            <div id="fileNameLabel"><i class="fa-solid fa-file-pdf"></i><span id="fileNameText"></span></div>
+
+            <button id="uploadBtn" class="btn-primary" onclick="startAudit()">فحص العقد الآن</button>
+        </div>
+
+        <div id="loader" class="loader">
+            <svg class="star-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="50,4 57.7,31.5 82.5,17.5 68.5,42.3 96,50 68.5,57.7 82.5,82.5 57.7,68.5 50,96 42.3,68.5 17.5,82.5 31.5,57.7 4,50 31.5,42.3 17.5,17.5 42.3,31.5" />
+            </svg>
+            <div class="loader-text" id="loaderText">جاري تهيئة النظام...</div>
+        </div>
+
+        <!-- الملخص -->
+        <div class="summary-dashboard" id="summaryDashboard">
+            <h3>ملخص نتائج التدقيق</h3>
+            <div class="summary-stats">
+                <div class="stat-box"><h3 id="statTotal" style="color: var(--ivory)">0</h3><p>إجمالي البنود</p></div>
+                <div class="stat-box"><h3 id="statSuccess" style="color: var(--emerald-light)">0</h3><p>متوافق</p></div>
+                <div class="stat-box"><h3 id="statDanger" style="color: var(--burgundy-light)">0</h3><p>مخالف</p></div>
+            </div>
+            <div class="chart-container">
+                <canvas id="auditChart"></canvas>
+            </div>
+        </div>
+
+        <!-- الفلترة -->
+        <div class="filters" id="filters">
+            <button class="filter-btn active" onclick="filterResults('all', this)">الكل</button>
+            <button class="filter-btn" onclick="filterResults('compliant', this)">المتوافقة فقط</button>
+            <button class="filter-btn" onclick="filterResults('non-compliant', this)">المخالفة فقط</button>
+        </div>
+
+        <!-- النتائج -->
+        <div id="resultsContainer"></div>
+
+    </div>
+</div>
+
+<script>
+    let auditChartInstance = null;
+    let stats = { total: 0, compliant: 0, nonCompliant: 0, review: 0 };
+
+    // 1. عرض العقد فور اختياره
+    function previewPDF() {
+        const file = document.getElementById('pdfFile').files[0];
+        const placeholder = document.getElementById('pdfPlaceholder');
+        const viewer = document.getElementById('pdfViewer');
+        const fileNameLabel = document.getElementById('fileNameLabel');
+        const fileNameText = document.getElementById('fileNameText');
+
+        if (file) {
+            const fileURL = URL.createObjectURL(file);
+            viewer.src = fileURL;
+            viewer.style.display = 'block';
+            placeholder.style.display = 'none';
+            fileNameText.textContent = file.name;
+            fileNameLabel.style.display = 'block';
+        }
+    }
+
+    // دعم السحب والإفلات
+    const dropzoneEl = document.getElementById('dropzone');
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropzoneEl.addEventListener(evt, (e) => { e.preventDefault(); dropzoneEl.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+        dropzoneEl.addEventListener(evt, (e) => { e.preventDefault(); dropzoneEl.classList.remove('dragover'); });
+    });
+    dropzoneEl.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files[0]) {
+            document.getElementById('pdfFile').files = dt.files;
+            previewPDF();
+        }
+    });
+
+    // 2. الفلترة الذكية
+    function filterResults(category, btnEl) {
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        btnEl.classList.add('active');
+
+        const items = document.querySelectorAll('.accordion-item');
+        items.forEach(item => {
+            if (category === 'all' || item.dataset.category === category) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // 3. فتح وإغلاق البطاقات
+    function toggleAccordion(headerEl) {
+        const body = headerEl.nextElementSibling;
+        const icon = headerEl.querySelector('.fa-chevron-down');
+        if (body.classList.contains('open')) {
+            body.classList.remove('open');
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            body.classList.add('open');
+            icon.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    // 4. النسخ السريع
+    function copyText(elementId) {
+        const text = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('تم نسخ تقرير التدقيق بنجاح!');
+        });
+    }
+
+    // 5. تأثير الكتابة الحية
+    async function typeWriter(text, elementId, speed = 10) {
+        const el = document.getElementById(elementId);
+        el.innerHTML = '';
+        el.classList.add('typewriter-cursor');
+
+        for (let i = 0; i < text.length; i++) {
+            el.innerHTML += text.charAt(i);
+            await new Promise(r => setTimeout(r, speed));
+        }
+        el.classList.remove('typewriter-cursor');
+    }
+
+    // 6. التقييم
+    function submitFeedback(btn, isPositive) {
+        const parent = btn.parentElement;
+        parent.innerHTML = `<span style="color: var(--emerald-light); font-size: 13px;"><i class="fa-solid fa-check"></i> شكراً لتقييمك، سيتم استخدامه لتحسين النموذج.</span>`;
+    }
+
+    // --- المحرك الأساسي للفحص ---
+    async function startAudit() {
+        const fileInput = document.getElementById('pdfFile');
+        const resultsDiv = document.getElementById('resultsContainer');
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loaderText');
+
+        if (!fileInput.files[0]) { alert("يرجى اختيار ملف العقد أولاً."); return; }
+
+        resultsDiv.innerHTML = '';
+        document.getElementById('summaryDashboard').style.display = 'none';
+        document.getElementById('filters').style.display = 'none';
+        loader.style.display = 'block';
+        document.getElementById('uploadBtn').disabled = true;
+        stats = { total: 0, compliant: 0, nonCompliant: 0, review: 0 };
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        try {
+            const response = await fetch("http://localhost:8000/upload-contract/", { method: "POST", body: formData });
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n\n');
+
+                for (let line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const dataStr = line.replace('data: ', '');
+                        try {
+                            const data = JSON.parse(dataStr);
+                            if (data.status === 'done') { finalizeAudit(); break; }
+
+                            loaderText.innerText = `النموذج يقرأ ويدقق البند رقم (${data.index + 1})...`;
+
+                            let statusClass = "badge-warning";
+                            let statusText = "يحتاج مراجعة";
+                            let category = "review";
+
+                            if (data.audit_result.includes("غير متوافق")) {
+                                statusClass = "badge-danger"; statusText = "مخالف شرعاً"; category = "non-compliant"; stats.nonCompliant++;
+                            } else if (data.audit_result.includes("متوافق")) {
+                                statusClass = "badge-success"; statusText = "متوافق شرعاً"; category = "compliant"; stats.compliant++;
+                            } else { stats.review++; }
+                            stats.total++;
+
+                            const textId = `audit-text-${data.index}`;
+
+                            const card = document.createElement('div');
+                            card.className = 'accordion-item';
+                            card.dataset.category = category;
+                            card.innerHTML = `
+                                <div class="accordion-header" onclick="toggleAccordion(this)">
+                                    <div>
+                                        <span class="clause-num">بند (${data.index})</span>
+                                        <span class="badge ${statusClass}">${statusText}</span>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-down" style="transition: 0.3s; color: var(--ivory-dim)"></i>
+                                </div>
+                                <div class="accordion-body open">
+                                    <div class="clause-text">"${data.original_clause}"</div>
+                                    <div class="audit-text" id="${textId}"></div>
+
+                                    <div class="action-bar">
+                                        <button class="action-btn" onclick="copyText('${textId}')" title="نسخ التقرير"><i class="fa-regular fa-copy"></i> نسخ</button>
+                                        <div style="margin-right: auto; display:flex; gap: 10px; align-items:center;">
+                                            <span style="color:var(--ivory-dim); font-size: 13px;">تقييم المخرج:</span>
+                                            <button class="action-btn" onclick="submitFeedback(this, true)"><i class="fa-regular fa-thumbs-up"></i></button>
+                                            <button class="action-btn" onclick="submitFeedback(this, false)"><i class="fa-regular fa-thumbs-down"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            resultsDiv.appendChild(card);
+
+                            await typeWriter(data.audit_result, textId, 15);
+
+                        } catch (e) { console.error("Error parsing chunk", e); }
+                    }
+                }
+            }
+        } catch (error) {
+            alert("حدث خطأ في الاتصال بالخادم.");
+        }
+    }
+
+    // 7. إنهاء الفحص ورسم لوحة الملخص
+    function finalizeAudit() {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('uploadBtn').disabled = false;
+
+        document.getElementById('statTotal').innerText = stats.total;
+        document.getElementById('statSuccess').innerText = stats.compliant;
+        document.getElementById('statDanger').innerText = stats.nonCompliant;
+
+        document.getElementById('summaryDashboard').style.display = 'block';
+        document.getElementById('filters').style.display = 'flex';
+
+        const ctx = document.getElementById('auditChart').getContext('2d');
+        if (auditChartInstance) auditChartInstance.destroy();
+
+        auditChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['متوافق', 'مخالف', 'يحتاج مراجعة'],
+                datasets: [{
+                    data: [stats.compliant, stats.nonCompliant, stats.review],
+                    backgroundColor: ['#1F7A5C', '#8B2635', '#C97A2B'],
+                    borderColor: '#0A1912',
+                    borderWidth: 3,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#F2ECDC', font: { family: "'Tajawal', sans-serif", size: 12 }, padding: 14 }
+                    }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>
