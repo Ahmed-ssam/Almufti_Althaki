@@ -34,8 +34,8 @@ python build_knowledge_base.py
 
 4. تشغيل الخادم والواجهة:
 
-Bash
 uvicorn api:app --reload
+
 ثم قم بفتح ملف المفتي-الذكي.html في متصفحك للبدء في تدقيق العقود!
 
 <img width="1919" height="907" alt="image" src="https://github.com/user-attachments/assets/97eaaaa7-1500-43d6-9745-6154c159fa09" />
