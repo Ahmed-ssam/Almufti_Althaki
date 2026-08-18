@@ -11,7 +11,7 @@
 
 ##  المعمارية والتقنيات المستخدمة (Tech Stack)
 * **Backend:** FastAPI, Python
-* **LLM Engine:** Ollama (Qwen2.5 Models)
+* **LLM Engine:** Ollama
 * **Vector Database:** ChromaDB
 * **Embeddings:** SentenceTransformers (multilingual-e5-small)
 * **OCR:** EasyOCR
